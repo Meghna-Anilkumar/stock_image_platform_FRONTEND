@@ -1,7 +1,7 @@
-import { ResponseData } from "../interface/Interface";
 import { AxiosError } from "axios";
 
-export interface ErrorResponse extends ResponseData {
+
+export interface ErrorResponse {
   data?: { [key: string]: string } | undefined
 }
 

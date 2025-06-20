@@ -67,7 +67,7 @@ const Dashboard: React.FC = () => {
         setUploads(Array.isArray(response.uploads) ? response.uploads : []);
         setError(null);
         toast.success("Uploads loaded successfully");
-      } catch (err: any) {
+      } catch (err) {
         console.error("[Dashboard] getUserUploads error:", {
           message: err.error?.message || "Failed to fetch uploads",
           status: err.response?.status,
@@ -117,7 +117,7 @@ const Dashboard: React.FC = () => {
       setTitles([]);
       setShowUploadModal(false);
       toast.success("Images uploaded successfully");
-    } catch (err: any) {
+    } catch (err) {
       console.error("[Dashboard] bulkUploadImages error:", {
         message: err.error?.message || "Bulk upload failed",
         status: err.response?.status,
@@ -135,7 +135,7 @@ const Dashboard: React.FC = () => {
 
   // Handle file selection with validation
   const MAX_FILE_COUNT = 10;
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > MAX_FILE_COUNT) {
@@ -175,7 +175,7 @@ const Dashboard: React.FC = () => {
   };
 
   // Handle drag-and-drop for selected files
-  const handleFileDragEnd = (result: any) => {
+  const handleFileDragEnd = (result) => {
     if (!result.destination) return;
     const newFiles = Array.from(selectedFiles);
     const newTitles = Array.from(titles);
@@ -216,7 +216,7 @@ const Dashboard: React.FC = () => {
       setSelectedImage(null);
       setEditImagePreview(null);
       toast.success("Image updated successfully");
-    } catch (err: any) {
+    } catch (err) {
       console.error("[Dashboard] editUpload error:", {
         message: err.error?.message || "Edit upload failed",
         status: err.response?.status,
@@ -241,7 +241,7 @@ const Dashboard: React.FC = () => {
       setError(null);
       setShowConfirmModal(false);
       toast.success("Image deleted successfully");
-    } catch (err: any) {
+    } catch (err) {
       console.error("[Dashboard] deleteUpload error:", {
         message: err.error?.message || "Delete upload failed",
         status: err.response?.status,
@@ -264,7 +264,7 @@ const Dashboard: React.FC = () => {
       dispatch(logout());
       navigate("/login");
       toast.success("Logged out successfully");
-    } catch (err: any) {
+    } catch (err) {
       console.error("[Dashboard] Logout error:", {
         message: err.message || "Logout failed",
         status: err.response?.status,
