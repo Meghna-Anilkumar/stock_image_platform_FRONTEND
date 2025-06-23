@@ -10,7 +10,6 @@ import { Eye, EyeOff, User, Mail, Phone } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-
 const validationSchema = Yup.object({
   loginMethod: Yup.string().oneOf(['email', 'phone'], 'Invalid login method').required(),
   email: Yup.string().when('loginMethod', {
@@ -28,7 +27,7 @@ const validationSchema = Yup.object({
     .required('Password is required'),
 });
 
-// Initial form values
+
 const initialValues = {
   loginMethod: 'email',
   email: '',
@@ -42,7 +41,6 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   
-  // Redux state access
   const authState = useSelector((state: RootState) => state.auth);
   const user = authState?.user || null;
   const token = authState?.token || null;
@@ -53,10 +51,17 @@ const Login: React.FC = () => {
   
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
-  // Check if user is already authenticated on component mount
+  const clearAllErrors = (setStatus?: (status) => void) => {
+    if (reduxError) {
+      dispatch(clearError());
+    }
+    if (setStatus) {
+      setStatus({});
+    }
+  };
+
   useEffect(() => {
     const checkExistingAuth = () => {
-      // If user is already logged in (from Redux state or localStorage)
       if (user && token) {
         toast.info('You are already logged in. Redirecting to dashboard...', {
           position: 'top-right',
@@ -66,14 +71,11 @@ const Login: React.FC = () => {
         return;
       }
 
-      // Check localStorage for persisted user data
       const userData = localStorage.getItem("userData");
       if (userData) {
         try {
           const parsedUser = JSON.parse(userData);
           if (parsedUser && parsedUser.id) {
-            // User data exists in localStorage, redirect to dashboard
-            // The AuthProvider should handle setting this in Redux state
             toast.info('Welcome back! Redirecting to dashboard...', {
               position: 'top-right',
               autoClose: 2000,
@@ -82,7 +84,6 @@ const Login: React.FC = () => {
             return;
           }
         } catch (error) {
-          // Invalid userData in localStorage, remove it
           localStorage.removeItem("userData");
         }
       }
@@ -93,7 +94,6 @@ const Login: React.FC = () => {
     checkExistingAuth();
   }, [user, token, navigate]);
 
-  // Handle successful login redirect and toasts
   useEffect(() => {
     if (user && token && !isCheckingAuth) {
       toast.success('Login successful! Redirecting to dashboard...', {
@@ -112,7 +112,6 @@ const Login: React.FC = () => {
     }
   }, [user, token, reduxError, navigate, isCheckingAuth]);
 
-  // Clear error when component unmounts
   useEffect(() => {
     return () => {
       if (reduxError) {
@@ -121,7 +120,11 @@ const Login: React.FC = () => {
     };
   }, [dispatch, reduxError]);
 
-  // Show loading spinner while checking authentication
+
+  useEffect(() => {
+    clearAllErrors();
+  }, []); 
+
   if (isCheckingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-300 via-purple-300 to-pink-300">
@@ -151,11 +154,8 @@ const Login: React.FC = () => {
           validationSchema={validationSchema}
           onSubmit={async (values, { setSubmitting, setStatus }) => {
             try {
-              // Clear any previous errors
-              dispatch(clearError());
-              setStatus({});
+              clearAllErrors(setStatus);
               
-              // Prepare login data based on selected method
               const loginData = {
                 password: values.password,
                 ...(values.loginMethod === 'email' 
@@ -175,13 +175,7 @@ const Login: React.FC = () => {
           }}
         >
           {({ isSubmitting, isValid, dirty, status, setStatus, values, setFieldValue }) => (
-            <Form
-              className="space-y-6"
-              onChange={() => {
-                if (status?.error) setStatus({}); // Clear error on input change
-                if (reduxError) dispatch(clearError()); // Clear Redux error
-              }}
-            >
+            <Form className="space-y-6">
               {/* Login Method Toggle */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -193,6 +187,7 @@ const Login: React.FC = () => {
                     onClick={() => {
                       setFieldValue('loginMethod', 'email');
                       setFieldValue('phone', '');
+                      clearAllErrors(setStatus); 
                     }}
                     className={`flex-1 flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-all ${
                       values.loginMethod === 'email'
@@ -208,6 +203,7 @@ const Login: React.FC = () => {
                     onClick={() => {
                       setFieldValue('loginMethod', 'phone');
                       setFieldValue('email', '');
+                      clearAllErrors(setStatus); 
                     }}
                     className={`flex-1 flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-all ${
                       values.loginMethod === 'phone'
@@ -234,6 +230,10 @@ const Login: React.FC = () => {
                       type="email"
                       placeholder="Enter your email"
                       className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      onChange={(e) => {
+                        setFieldValue('email', e.target.value);
+                        clearAllErrors(setStatus); 
+                      }}
                     />
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   </div>
@@ -258,6 +258,10 @@ const Login: React.FC = () => {
                       type="tel"
                       placeholder="Enter your phone number"
                       className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      onChange={(e) => {
+                        setFieldValue('phone', e.target.value);
+                        clearAllErrors(setStatus); 
+                      }}
                     />
                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   </div>
@@ -282,6 +286,10 @@ const Login: React.FC = () => {
                     placeholder="Enter your password"
                     autoComplete="current-password"
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    onChange={(e) => {
+                      setFieldValue('password', e.target.value);
+                      clearAllErrors(setStatus); 
+                    }}
                   />
                   <button
                     type="button"
@@ -298,7 +306,6 @@ const Login: React.FC = () => {
                 />
               </div>
 
-              {/* Error and Success Messages */}
               {(status?.error || reduxError) && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <div className="text-red-700 text-sm text-center">
@@ -311,8 +318,6 @@ const Login: React.FC = () => {
                   <div className="text-green-700 text-sm text-center">{status.success}</div>
                 </div>
               )}
-
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isSubmitting || !isValid || !dirty || loading}
@@ -335,7 +340,6 @@ const Login: React.FC = () => {
           )}
         </Formik>
 
-        {/* Sign Up Link */}
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}

@@ -29,7 +29,12 @@ const handleSuccess = (response) => {
 const handleError = async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Don't try to refresh token for login, signup, or refresh-token endpoints
+    const isAuthEndpoint = originalRequest.url?.includes('/login') || 
+                          originalRequest.url?.includes('/signup') || 
+                          originalRequest.url?.includes('/refresh-token');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
         if (isRefreshing) {
             // If we're already refreshing, queue this request
             return new Promise((resolve, reject) => {
@@ -66,6 +71,11 @@ const handleError = async (error) => {
             window.location.href = '/login';
             return Promise.reject(refreshError);
         }
+    }
+
+    // For login/signup errors or other 401s, let them pass through
+    if (error.response?.status === 401 && isAuthEndpoint) {
+        return Promise.reject(error);
     }
 
     if (error.response?.status === 403) {
